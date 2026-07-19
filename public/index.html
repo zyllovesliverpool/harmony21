@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>21天 · 快乐一家人</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ===== Welcome ===== -->
+    <div id="welcome-screen" class="screen active">
+      <div class="welcome-content">
+        <div class="welcome-emoji">🏠</div>
+        <h1 class="welcome-title">21天 · 快乐一家人</h1>
+        <p class="welcome-subtitle">用 21 天，一起养成更和谐的相处方式</p>
+        <p class="welcome-desc">
+          每天完成一个小任务，记录心情，互相评分。<br>
+          21 天后，你们会发现自己变得更懂彼此。
+        </p>
+        <button class="btn btn-primary" onclick="navigate('password')">开始我们的旅程</button>
+      </div>
+      <div class="welcome-footer">
+        <span>✨ 第1周 · 重新认识</span>
+        <span>💞 第2周 · 深度连接</span>
+        <span>🌟 第3周 · 共创未来</span>
+      </div>
+    </div>
+
+    <!-- ===== Password / Login ===== -->
+    <div id="password-screen" class="screen">
+      <div class="form-screen">
+        <div class="form-emoji">🔐</div>
+        <h2>你们的共享密码</h2>
+        <p class="form-desc">两人共用一个密码，数据只有你们能看到</p>
+        <div class="form-input-group">
+          <input type="password" id="password-input" class="form-input" placeholder="设置 / 输入共享密码" maxlength="32" autocomplete="off">
+        </div>
+        <button class="btn btn-primary" onclick="handlePassword()" id="password-btn">进入</button>
+        <p id="password-error" class="form-error"></p>
+        <p class="form-hint" id="password-hint">首次使用 → 设置密码</p>
+      </div>
+    </div>
+
+    <!-- ===== Setup Players ===== -->
+    <div id="setup-screen" class="screen">
+      <div class="setup-header">
+        <h2>👋 欢迎你们！</h2>
+        <p>先告诉对方你的名字和喜欢的表情</p>
+      </div>
+      <div class="setup-cards">
+        <div class="setup-card" data-player="0">
+          <div class="setup-card-label">第一位</div>
+          <div class="emoji-picker" data-player="0">
+            <span class="emoji-display" data-player="0">😊</span>
+            <div class="emoji-options" data-player="0">
+              <span>😊</span><span>😄</span><span>🥰</span><span>😎</span><span>🤗</span>
+              <span>😇</span><span>😺</span><span>🦊</span><span>🐱</span><span>🐶</span>
+              <span>🐰</span><span>🐼</span><span>🦁</span><span>🌈</span><span>🌟</span>
+              <span>☀️</span><span>🌸</span><span>🌻</span><span>🍀</span><span>💪</span>
+            </div>
+          </div>
+          <input type="text" class="name-input" data-player="0" placeholder="你的名字..." maxlength="8">
+        </div>
+        <div class="setup-card" data-player="1">
+          <div class="setup-card-label">第二位</div>
+          <div class="emoji-picker" data-player="1">
+            <span class="emoji-display" data-player="1">🥰</span>
+            <div class="emoji-options" data-player="1">
+              <span>🥰</span><span>😊</span><span>😍</span><span>🤩</span><span>😌</span>
+              <span>😇</span><span>🐱</span><span>🦊</span><span>🐰</span><span>🐶</span>
+              <span>🐼</span><span>🦁</span><span>🐯</span><span>🌸</span><span>🌺</span>
+              <span>🌙</span><span>⭐</span><span>☀️</span><span>🍀</span><span>💖</span>
+            </div>
+          </div>
+          <input type="text" class="name-input" data-player="1" placeholder="你的名字..." maxlength="8">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="startJourney()">出发！</button>
+    </div>
+
+    <!-- ===== Main App ===== -->
+    <div id="main-app" class="screen">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <span class="app-logo">🏠</span>
+          <span class="app-title">快乐一家人</span>
+        </div>
+        <div class="top-bar-right">
+          <span class="harmony-badge">💞 <span id="harmony-score">0</span></span>
+          <button class="btn-icon" onclick="logout()" title="退出登录">🚪</button>
+        </div>
+      </div>
+
+      <div class="day-header">
+        <div class="day-number" id="day-number">第 1 天</div>
+        <div class="day-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <span class="progress-text" id="progress-text">1/21</span>
+        </div>
+        <div class="week-label" id="week-label">第 1 周 · 重新认识彼此</div>
+      </div>
+
+      <div class="content-area" id="content-area">
+        <!-- Dashboard -->
+        <div id="view-dashboard" class="view active">
+          <div class="card mission-card" id="mission-card">
+            <div class="card-header">
+              <span>📋 今日任务</span>
+              <span class="day-theme" id="day-theme"></span>
+            </div>
+            <div class="mission-content">
+              <p class="mission-text" id="mission-text">加载中...</p>
+              <div class="mission-hint" id="mission-hint"></div>
+            </div>
+            <div class="mission-players">
+              <div class="mission-player" data-player="0" onclick="toggleComplete(0)">
+                <span class="player-emoji" id="p0-emoji-mission"></span>
+                <span class="player-name" id="p0-name-mission"></span>
+                <span class="check-indicator" id="p0-check">⬜</span>
+              </div>
+              <div class="mission-player" data-player="1" onclick="toggleComplete(1)">
+                <span class="player-emoji" id="p1-emoji-mission"></span>
+                <span class="player-name" id="p1-name-mission"></span>
+                <span class="check-indicator" id="p1-check">⬜</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mood-card" id="mood-card">
+            <div class="card-header">
+              <span>💭 今天心情</span>
+              <span class="card-subtitle">分别选一个代表今天的心情</span>
+            </div>
+            <div class="mood-players">
+              <div class="mood-player" data-player="0">
+                <span class="player-label" id="p0-label-mood"></span>
+                <div class="mood-options" id="p0-mood-options">
+                  <span data-mood="😄" onclick="setMood(0,'😄')">😄</span>
+                  <span data-mood="😊" onclick="setMood(0,'😊')">😊</span>
+                  <span data-mood="🙂" onclick="setMood(0,'🙂')">🙂</span>
+                  <span data-mood="😐" onclick="setMood(0,'😐')">😐</span>
+                  <span data-mood="😞" onclick="setMood(0,'😞')">😞</span>
+                </div>
+              </div>
+              <div class="mood-player" data-player="1">
+                <span class="player-label" id="p1-label-mood"></span>
+                <div class="mood-options" id="p1-mood-options">
+                  <span data-mood="😄" onclick="setMood(1,'😄')">😄</span>
+                  <span data-mood="😊" onclick="setMood(1,'😊')">😊</span>
+                  <span data-mood="🙂" onclick="setMood(1,'🙂')">🙂</span>
+                  <span data-mood="😐" onclick="setMood(1,'😐')">😐</span>
+                  <span data-mood="😞" onclick="setMood(1,'😞')">😞</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card rating-card" id="rating-card" style="display:none">
+            <div class="card-header">
+              <span>💞 今日和谐度评分</span>
+              <span class="card-subtitle">给今天的彼此打个分吧</span>
+            </div>
+            <div class="rating-players">
+              <div class="rating-player" data-player="0">
+                <span class="player-label" id="p0-label-rating"></span>
+                <div class="stars" id="p0-stars">
+                  <span data-val="1" onclick="setRating(0,1)">☆</span>
+                  <span data-val="2" onclick="setRating(0,2)">☆</span>
+                  <span data-val="3" onclick="setRating(0,3)">☆</span>
+                  <span data-val="4" onclick="setRating(0,4)">☆</span>
+                  <span data-val="5" onclick="setRating(0,5)">☆</span>
+                </div>
+              </div>
+              <div class="rating-player" data-player="1">
+                <span class="player-label" id="p1-label-rating"></span>
+                <div class="stars" id="p1-stars">
+                  <span data-val="1" onclick="setRating(1,1)">☆</span>
+                  <span data-val="2" onclick="setRating(1,2)">☆</span>
+                  <span data-val="3" onclick="setRating(1,3)">☆</span>
+                  <span data-val="4" onclick="setRating(1,4)">☆</span>
+                  <span data-val="5" onclick="setRating(1,5)">☆</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card journal-card">
+            <div class="card-header">
+              <span>📝 每日心声</span>
+              <span class="card-subtitle">写下今天想对对方说的话</span>
+            </div>
+            <div class="journal-players">
+              <div class="journal-player" data-player="0">
+                <span class="player-label" id="p0-label-journal"></span>
+                <textarea class="journal-input" id="p0-journal" placeholder="今天想对 TA 说..." rows="2" oninput="saveJournal(0)"></textarea>
+              </div>
+              <div class="journal-player" data-player="1">
+                <span class="player-label" id="p1-label-journal"></span>
+                <textarea class="journal-input" id="p1-journal" placeholder="今天想对 TA 说..." rows="2" oninput="saveJournal(1)"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-next" id="btn-next" onclick="nextDay()" style="display:none">
+            进入第 <span id="next-day-num">2</span> 天 →
+          </button>
+        </div>
+
+        <!-- Progress View -->
+        <div id="view-progress" class="view">
+          <div class="card">
+            <div class="card-header">
+              <span>📊 21天进度</span>
+              <span class="card-subtitle">看看你们的旅程</span>
+            </div>
+            <div class="progress-grid" id="progress-grid"></div>
+            <div class="progress-stats" id="progress-stats"></div>
+          </div>
+          <div class="card harmony-chart-card">
+            <div class="card-header">
+              <span>💞 和谐度趋势</span>
+            </div>
+            <div class="harmony-chart" id="harmony-chart"></div>
+          </div>
+        </div>
+
+        <!-- Journal View -->
+        <div id="view-journal" class="view">
+          <div class="card">
+            <div class="card-header">
+              <span>📖 我们的日记</span>
+              <span class="card-subtitle">一路走来的点点滴滴</span>
+            </div>
+            <div class="journal-timeline" id="journal-timeline">
+              <p class="empty-hint">还没有日记，开始打卡吧 📝</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <button class="nav-item active" onclick="switchView('dashboard')">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">今日</span>
+        </button>
+        <button class="nav-item" onclick="switchView('progress')">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">进度</span>
+        </button>
+        <button class="nav-item" onclick="switchView('journal')">
+          <span class="nav-icon">📖</span>
+          <span class="nav-label">日记</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
