@@ -22,7 +22,7 @@ const API = {
       headers: this._headers(),
       body: body !== undefined ? JSON.stringify(body) : undefined
     });
-    try { data = await res.json(); } catch { throw new Error("请求失败 (" + res.status + ")"); }
+    try { data = await res.json(); } catch(_){ throw new Error("请求失败 (" + res.status + ")"); }
     if (!res.ok) throw new Error(data ? (data.detail || "请求失败 (" + res.status + ")") : "请求失败 (" + res.status + ")");
     return data;
   },
