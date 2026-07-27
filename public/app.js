@@ -101,6 +101,7 @@ let STATE = {
 };
 
 let _saveTimer = null;
+let _viewDay = 1;
 
 function _defaultState() {
   return {
@@ -269,6 +270,7 @@ async function startJourney() {
 // 8. Enter Main App & Render
 // ============================
 function enterMainApp() {
+  _viewDay = STATE.currentDay;
   navigate('main');
   renderAll();
 }
@@ -287,7 +289,7 @@ function renderAll() {
 }
 
 function renderHeader() {
-  const d = STATE.currentDay;
+  const d = _viewDay;
   document.getElementById('day-number').textContent = `第 ${d} 天`;
   document.getElementById('progress-text').textContent = `${Math.min(d, 21)}/21`;
   document.getElementById('progress-fill').style.width = `${(Math.min(d, 21) / 21) * 100}%`;
@@ -297,7 +299,7 @@ function renderHeader() {
 }
 
 function renderMission() {
-  const d = STATE.currentDay;
+  const d = _viewDay;
   const ms = MISSIONS[d - 1];
   if (!ms) return;
   document.getElementById('mission-text').textContent = ms.text;
@@ -312,7 +314,7 @@ function renderMission() {
 }
 
 function renderMood() {
-  const d = STATE.currentDay;
+  const d = _viewDay;
   for (let pi = 0; pi < 2; pi++) {
     document.getElementById(`p${pi}-label-mood`).textContent = _label(pi);
     const mood = _getMood(d, pi);
@@ -323,7 +325,7 @@ function renderMood() {
 }
 
 function renderRating() {
-  const d = STATE.currentDay;
+  const d = _viewDay;
   const both = _getCompleted(d, 0) && _getCompleted(d, 1);
   document.getElementById('rating-card').style.display = both ? 'block' : 'none';
   for (let pi = 0; pi < 2; pi++) {
@@ -339,7 +341,7 @@ function renderRating() {
 }
 
 function renderJournal() {
-  const d = STATE.currentDay;
+  const d = _viewDay;
   for (let pi = 0; pi < 2; pi++) {
     document.getElementById(`p${pi}-label-journal`).textContent = _label(pi);
     const text = _getJournal(d, pi);
@@ -363,7 +365,7 @@ function renderHarmonyScore() {
 // 9. Interactions (mutations)
 // ============================
 function toggleComplete(pi) {
-  const d = STATE.currentDay;
+  const d = _viewDay;
   const k = String(d);
   if (!STATE.completedDays[k]) STATE.completedDays[k] = {};
   STATE.completedDays[k][pi] = !_getCompleted(d, pi);
@@ -377,7 +379,7 @@ function toggleComplete(pi) {
 }
 
 function setMood(pi, mood) {
-  const d = STATE.currentDay;
+  const d = _viewDay;
   const k = String(d);
   if (!STATE.moods[k]) STATE.moods[k] = {};
   STATE.moods[k][pi] = mood;
@@ -387,7 +389,7 @@ function setMood(pi, mood) {
 }
 
 function setRating(pi, val) {
-  const d = STATE.currentDay;
+  const d = _viewDay;
   const k = String(d);
   if (!STATE.ratings[k]) STATE.ratings[k] = {};
   STATE.ratings[k][pi] = val;
@@ -399,7 +401,7 @@ function setRating(pi, val) {
 }
 
 function saveJournal(pi) {
-  const d = STATE.currentDay;
+  const d = _viewDay;
   const k = String(d);
   if (!STATE.journals[k]) STATE.journals[k] = {};
   STATE.journals[k][pi] = document.getElementById(`p${pi}-journal`).value;
@@ -461,14 +463,70 @@ function checkNextDay() {
 async function nextDay() {
   if (STATE.currentDay >= 21) return;
   STATE.currentDay++;
+  _viewDay = STATE.currentDay;
   try {
     await API.saveState(STATE);
     renderAll();
     document.getElementById('content-area').scrollTop = 0;
   } catch (e) {
     STATE.currentDay--;
+    _viewDay = STATE.currentDay;
     alert('保存失败：' + e.message);
   }
+}
+
+// ============================
+// 11b. Day Navigation & Manual Save
+// ============================
+function goToPrevDay() {
+  if (_viewDay > 1) {
+    _viewDay--;
+    _updateDayNav();
+    renderAll();
+  }
+}
+
+function goToNextDayView() {
+  if (_viewDay < STATE.currentDay) {
+    _viewDay++;
+    _updateDayNav();
+    renderAll();
+  }
+}
+
+function goToToday() {
+  _viewDay = STATE.currentDay;
+  _updateDayNav();
+  renderAll();
+}
+
+function _updateDayNav() {
+  const nav = document.getElementById('day-nav');
+  if (!nav) return;
+  const atFirst = _viewDay <= 1;
+  const atCurrent = _viewDay >= STATE.currentDay;
+  nav.innerHTML = \`<button class="day-nav-btn" onclick="goToPrevDay()" \${atFirst ? 'disabled' : ''}>‹</button>
+<span class="day-nav-title">\${atCurrent ? '📌 今天' : '📖 第 ' + _viewDay + ' 天'}</span>
+\${!atCurrent ? '<button class="day-nav-btn today-btn" onclick="goToToday()">今天</button>' : '<span style="min-width:52px"></span>'}
+<button class="day-nav-btn" onclick="goToNextDayView()" \${atCurrent ? 'disabled' : ''}>›</button>\`;
+}
+
+async function manualSave() {
+  const btn = document.getElementById('save-btn');
+  const status = document.getElementById('save-status');
+  if (!btn || !status) return;
+  btn.style.opacity = '0.5';
+  status.textContent = '保存中...';
+  status.style.display = 'inline';
+  try {
+    await API.saveState(STATE);
+    status.textContent = '✓ 已保存';
+    setTimeout(() => { status.style.display = 'none'; }, 2000);
+  } catch (e) {
+    status.textContent = '✗ 保存失败';
+    setTimeout(() => { status.style.display = 'none'; }, 3000);
+  }
+  btn.style.opacity = '1';
 }
 
 // ============================
