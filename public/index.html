@@ -261,6 +261,29 @@
       </div>
     </div>
   </div>
-  <script src="app.js"></script>
+  <script>
+// Show JS errors on screen for debugging
+window.onerror = function(msg, url, line, col, err) {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#c0392b;color:white;padding:12px 16px;z-index:99999;font-size:13px;line-height:1.5;font-family:sans-serif;text-align:left';
+  el.textContent = 'JS Error: ' + (msg || 'unknown') + ' (line ' + (line || '?') + ')';
+  document.body.appendChild(el);
+};
+// Verify navigate is defined (runs after a delay)
+setTimeout(function() {
+  if (typeof navigate === 'undefined') {
+    var el = document.createElement('div');
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#e67e22;color:white;padding:12px 16px;z-index:99999;font-size:13px;font-family:sans-serif';
+    el.textContent = '⚠ JS loaded but navigate() not defined. app.js may have a syntax error.';
+    document.body.appendChild(el);
+  } else {
+    var el = document.createElement('div');
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#27ae60;color:white;padding:12px 16px;z-index:99999;font-size:13px;font-family:sans-serif';
+    el.textContent = '✓ JS loaded, navigate() OK';
+    document.body.appendChild(el);
+  }
+}, 1000);
+</script>
+<script src="app.js"></script>
 </body>
 </html>
